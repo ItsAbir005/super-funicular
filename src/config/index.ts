@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig();
 const configSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]),
   PORT: z.string().transform(Number),
