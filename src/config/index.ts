@@ -6,6 +6,7 @@ const configSchema = z.object({
 type Config = z.infer<typeof configSchema>;
 export function loadConfig(): Config {
   const parsed = configSchema.safeParse(process.env);
+  
   if (!parsed.success) {
     console.error("[orbit] invalid configuration");
     console.error(parsed.error.format());
