@@ -4,6 +4,7 @@ dotenvConfig();
 const configSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]),
   PORT: z.string().transform(Number),
+  REDIS_URL: z.string().url(),
 });
 type Config = z.infer<typeof configSchema>;
 export function loadConfig(): Config {

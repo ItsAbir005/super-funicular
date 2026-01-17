@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { loadConfig } from "./config";
 import { logger } from "./logger";
 import { AppError, NotFoundError } from "./errors/AppError";
+import { redis } from "./redis";
 
 const config = loadConfig();
 const { PORT } = config;
@@ -10,29 +11,37 @@ const { PORT } = config;
 const server = http.createServer(async (req, res) => {
   const requestId = randomUUID();
   const startTime = Date.now();
-
   res.setHeader("x-request-id", requestId);
-
   try {
     logger.info(
       { requestId, method: req.method, url: req.url },
       "request received"
     );
-
     if (req.method === "GET" && req.url === "/health") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ status: "ok" }));
+      try {
+        await redis.ping();
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            status: "ok",
+            redis: "up",
+          })
+        );
+      } catch {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            status: "degraded",
+            redis: "down",
+          })
+        );
+      }
       return;
     }
-
     throw new NotFoundError("Route not found");
   } catch (err) {
     handleError(err, req, res, requestId, startTime);
   }
-});
-
-server.listen(PORT, () => {
-  logger.info({ port: PORT }, "orbit server started");
 });
 function handleError(
   err: unknown,
@@ -65,3 +74,16 @@ function handleError(
     })
   );
 }
+async function start() {
+  try {
+    await redis.connect();
+    server.listen(PORT, () => {
+      logger.info({ port: PORT }, "orbit server started");
+    });
+  } catch (err) {
+    logger.error({ err }, "failed to start orbit");
+    process.exit(1);
+  }
+}
+start();
+
