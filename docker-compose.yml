@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: orbit-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orbit-network
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orbit-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - orbit-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  orbit-network:
+    driver: bridge
