@@ -4,6 +4,7 @@ import { loadConfig } from "./config";
 import { logger } from "./logger";
 import { AppError, NotFoundError } from "./errors/AppError";
 import { redis } from "./redis";
+import { cleanupDeadDrivers } from "./redis/cleanup";
 
 const config = loadConfig();
 const { PORT } = config;
@@ -73,6 +74,9 @@ function handleError(
       requestId,
     })
   );
+setInterval(() => {
+    cleanupDeadDrivers().catch(() => { });
+  }, 10_000);
 }
 async function start() {
   try {
