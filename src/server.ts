@@ -5,10 +5,22 @@ import { logger } from "./logger";
 import { AppError, NotFoundError } from "./errors/AppError";
 import { redis } from "./redis";
 import { cleanupDeadDrivers } from "./redis/cleanup";
-
+import WebSocket, { WebSocketServer } from "ws";
+import { handleMessage, cleanupSocket } from "./ws/handler";
 const config = loadConfig();
 const { PORT } = config;
+export const wss = new WebSocketServer({
+  port: 8081,
+});
+wss.on("connection", (socket) => {
+  socket.on("message", (msg) => {
+    handleMessage(socket, msg.toString());
+  });
 
+  socket.on("close", () => {
+    cleanupSocket(socket);
+  });
+});
 const server = http.createServer(async (req, res) => {
   const requestId = randomUUID();
   const startTime = Date.now();
