@@ -86,13 +86,13 @@ function handleError(
       requestId,
     })
   );
-setInterval(() => {
-    cleanupDeadDrivers().catch(() => { });
-  }, 10_000);
 }
 async function start() {
   try {
     await redis.connect();
+    setInterval(() => {
+      cleanupDeadDrivers().catch(() => { });
+    }, 10_000);
     server.listen(PORT, () => {
       logger.info({ port: PORT }, "orbit server started");
     });
