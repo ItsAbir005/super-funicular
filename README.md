@@ -203,7 +203,7 @@ POST /release/driver-123
 
 ---
 
-## 🔌 WebSocket API
+## WebSocket API
 
 ### Connection
 ```
@@ -358,5 +358,3 @@ wscat -c ws://localhost:8081
 > {"type":"DRIVER_LOCATION","driverId":"driver-99","lat":40.7128,"lng":-74.0060}
 ```
 ---
-
- 200, "operation");
